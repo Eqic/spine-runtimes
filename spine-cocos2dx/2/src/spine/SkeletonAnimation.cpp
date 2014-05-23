@@ -115,7 +115,7 @@ SkeletonAnimation::SkeletonAnimation (const char* skeletonDataFile, const char* 
 
 SkeletonAnimation::~SkeletonAnimation () {
 	if (ownsAnimationStateData) spAnimationStateData_dispose(state->data);
-	spAnimationState_dispose(state);
+	if (state) spAnimationState_dispose(state);
 }
 
 void SkeletonAnimation::update (float deltaTime) {
@@ -131,7 +131,7 @@ void SkeletonAnimation::setAnimationStateData (spAnimationStateData* stateData) 
 	CCAssert(stateData, "stateData cannot be null.");
 
 	if (ownsAnimationStateData) spAnimationStateData_dispose(state->data);
-	spAnimationState_dispose(state);
+	if (state) spAnimationState_dispose(state);
 
 	ownsAnimationStateData = false;
 	state = spAnimationState_create(stateData);
