@@ -92,7 +92,7 @@ static const int quadTriangles[6] = {0, 1, 2, 2, 3, 0};
 	if (!self) return nil;
 
 	spSkeletonJson* json = spSkeletonJson_create(atlas);
-	json->scale = scale / CC_CONTENT_SCALE_FACTOR();
+	json->scale = scale;
 	spSkeletonData* skeletonData = spSkeletonJson_readSkeletonDataFile(json, [skeletonDataFile UTF8String]);
 	NSAssert(skeletonData, ([NSString stringWithFormat:@"Error reading skeleton data file: %@\nError: %s", skeletonDataFile, json->error]));
 	spSkeletonJson_dispose(json);
@@ -112,7 +112,7 @@ static const int quadTriangles[6] = {0, 1, 2, 2, 3, 0};
 	if (!_atlas) return 0;
 
 	spSkeletonJson* json = spSkeletonJson_create(_atlas);
-	json->scale = scale / CC_CONTENT_SCALE_FACTOR();
+	json->scale = scale;
 	spSkeletonData* skeletonData = spSkeletonJson_readSkeletonDataFile(json, [skeletonDataFile UTF8String]);
 	NSAssert(skeletonData, ([NSString stringWithFormat:@"Error reading skeleton data file: %@\nError: %s", skeletonDataFile, json->error]));
 	spSkeletonJson_dispose(json);
@@ -134,6 +134,7 @@ static const int quadTriangles[6] = {0, 1, 2, 2, 3, 0};
 
 - (void) draw {
 	CC_NODE_DRAW_SETUP();
+	ccGLBindVAO(0);
 
 	ccColor3B nodeColor = self.color;
 	_skeleton->r = nodeColor.r / (float)255;

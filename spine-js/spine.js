@@ -123,7 +123,7 @@ spine.Slot.prototype = {
 	r: 1, g: 1, b: 1, a: 1,
 	_attachmentTime: 0,
 	attachment: null,
-	attachmentVertices: null,
+	attachmentVertices: [],
 	setAttachment: function (attachment) {
 		this.attachment = attachment;
 		this._attachmentTime = this.skeleton.time;
@@ -631,12 +631,8 @@ spine.FfdTimeline.prototype = {
 		var vertexCount = frameVertices[0].length;
 
 		var vertices = slot.attachmentVertices;
-		if (vertices.length < vertexCount) {
-			vertices = [];
-			vertices.length = vertexCount;
-			slot.attachmentVertices = vertices;
-		}
-		slot.attachmentVertices.length = vertexCount;
+		if (vertices.length != vertexCount) alpha = 1;
+		vertices.length = vertexCount;
 
 		if (time >= frames[frames.length - 1]) { // Time is after last frame.
 			var lastVertices = frameVertices[frames.length - 1];
@@ -828,18 +824,21 @@ spine.Skeleton.prototype = {
 	 * each slot's setup mode attachment is attached from the new skin.
 	 * @param newSkin May be null. */
 	setSkin: function (newSkin) {
-		if (!this.skin) {
-			var slots = this.slots;
-			for (var i = 0, n = slots.length; i < n; i++) {
-				var slot = slots[i];
-				var name = slot.data.attachmentName;
-				if (name) {
-					var attachment = newSkin.getAttachment(i, name);
-					if (attachment) slot.setAttachment(attachment);
+		if (newSkin) {
+			if (this.skin)
+				newSkin._attachAll(this, this.skin);
+			else {
+				var slots = this.slots;
+				for (var i = 0, n = slots.length; i < n; i++) {
+					var slot = slots[i];
+					var name = slot.data.attachmentName;
+					if (name) {
+						var attachment = newSkin.getAttachment(i, name);
+						if (attachment) slot.setAttachment(attachment);
+					}
 				}
 			}
-		} else if (newSkin)
-			newSkin._attachAll(this, this.skin);
+		}
 		this.skin = newSkin;
 	},
 	/** @return May be null. */
@@ -915,6 +914,8 @@ spine.RegionAttachment.prototype = {
 	rotation: 0,
 	scaleX: 1, scaleY: 1,
 	width: 0, height: 0,
+	r: 1, g: 1, b: 1, a: 1,
+	path: null,
 	rendererObject: null,
 	regionOffsetX: 0, regionOffsetY: 0,
 	regionWidth: 0, regionHeight: 0,
@@ -1004,7 +1005,7 @@ spine.MeshAttachment.prototype = {
 	regionOriginalWidth: 0, regionOriginalHeight: 0,
 	edges: null,
 	width: 0, height: 0,
-	updateUVs: function (u, v, u2, v2, rotate) {
+	updateUVs: function () {
 		var width = regionU2 - regionU, height = regionV2 - regionV;
 		var n = regionUVs.length;
 		if (!uvs || uvs.length != n) {
@@ -1456,7 +1457,7 @@ spine.SkeletonJson.prototype = {
 		
 		var scale = this.scale;
 		if (type == spine.AttachmentType.region) {
-			var region = attachmentLoader.newRegionAttachment(skin, name, path);
+			var region = this.attachmentLoader.newRegionAttachment(skin, name, path);
 			if (!region) return null;
 			region.path = path;
 			region.x = (map["x"] || 0) * this.scale;
@@ -1478,7 +1479,7 @@ spine.SkeletonJson.prototype = {
 			region.updateOffset();
 			return region;
 		} else if (type == spine.AttachmentType.mesh) {
-			var mesh = attachmentLoader.newMeshAttachment(skin, name, path);
+			var mesh = this.attachmentLoader.newMeshAttachment(skin, name, path);
 			if (!mesh) return null;
 			mesh.path = path; 
 			mesh.vertices = this.getFloatArray(map, "vertices", scale);
@@ -1500,7 +1501,7 @@ spine.SkeletonJson.prototype = {
 			mesh.height = (map["height"] || 0) * scale;
 			return mesh;
 		} else if (type == spine.AttachmentType.skinnedmesh) {
-			var mesh = attachmentLoader.newSkinnedMeshAttachment(skin, name, path);
+			var mesh = this.attachmentLoader.newSkinnedMeshAttachment(skin, name, path);
 			if (!mesh) return null;
 			mesh.path = path;
 
@@ -1539,6 +1540,7 @@ spine.SkeletonJson.prototype = {
 			mesh.height = (map["height"] || 0) * scale;
 			return mesh;
 		} else if (type == spine.AttachmentType.boundingbox) {
+			var attachment = this.attachmentLoader.newBoundingBoxAttachment(skin, name);
 			var vertices = map["vertices"];
 			for (var i = 0, n = vertices.length; i < n; i++)
 				attachment.vertices.push(vertices[i] * this.scale);

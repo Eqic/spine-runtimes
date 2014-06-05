@@ -98,7 +98,7 @@ SkeletonRenderer::SkeletonRenderer (const char* skeletonDataFile, spAtlas* atlas
 	initialize();
 
 	spSkeletonJson* json = spSkeletonJson_create(atlas);
-	json->scale = scale / Director::getInstance()->getContentScaleFactor();
+	json->scale = scale;
 	spSkeletonData* skeletonData = spSkeletonJson_readSkeletonDataFile(json, skeletonDataFile);
 	CCASSERT(skeletonData, json->error ? json->error : "Error reading skeleton data.");
 	spSkeletonJson_dispose(json);
@@ -113,7 +113,7 @@ SkeletonRenderer::SkeletonRenderer (const char* skeletonDataFile, const char* at
 	CCASSERT(atlas, "Error reading atlas file.");
 
 	spSkeletonJson* json = spSkeletonJson_create(atlas);
-	json->scale = scale / Director::getInstance()->getContentScaleFactor();
+	json->scale = scale;
 	spSkeletonData* skeletonData = spSkeletonJson_readSkeletonDataFile(json, skeletonDataFile);
 	CCASSERT(skeletonData, json->error ? json->error : "Error reading skeleton data file.");
 	spSkeletonJson_dispose(json);
@@ -142,6 +142,7 @@ void SkeletonRenderer::draw(Renderer* renderer, const kmMat4& transform, bool tr
 void SkeletonRenderer::drawSkeleton (const kmMat4& transform, bool transformUpdated) {
 	getShaderProgram()->use();
 	getShaderProgram()->setUniformsForBuiltins(transform);
+	GL::bindVAO(0);
 
 	Color3B nodeColor = getColor();
 	skeleton->r = nodeColor.r / (float)255;
