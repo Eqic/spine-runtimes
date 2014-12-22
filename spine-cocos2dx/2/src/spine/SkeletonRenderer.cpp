@@ -61,6 +61,10 @@ SkeletonRenderer* SkeletonRenderer::createWithFile (const char* skeletonDataFile
 }
 
 void SkeletonRenderer::initialize () {
+  skeleton = 0;
+  rootBone = 0;
+  ownsSkeletonData = false;
+  
 	atlas = 0;
 	debugSlots = false;
 	debugBones = false;
@@ -76,7 +80,7 @@ void SkeletonRenderer::initialize () {
 	setOpacityModifyRGB(true);
 
 	setShaderProgram(CCShaderCache::sharedShaderCache()->programForKey(kCCShader_PositionTextureColor));
-	scheduleUpdate();
+//	scheduleUpdate(); // 해제된 메모리가 재사용되는 경우가 있어 CCScheduler에서 assertion failed 발생
 }
 
 void SkeletonRenderer::setSkeletonData (spSkeletonData *skeletonData, bool ownsSkeletonData) {
@@ -125,7 +129,7 @@ SkeletonRenderer::SkeletonRenderer (const char* skeletonDataFile, const char* at
 SkeletonRenderer::~SkeletonRenderer () {
 	if (ownsSkeletonData) spSkeletonData_dispose(skeleton->data);
 	if (atlas) spAtlas_dispose(atlas);
-	spSkeleton_dispose(skeleton);
+	if (skeleton) spSkeleton_dispose(skeleton);
 	FREE(worldVertices);
 	batch->release();
 }
