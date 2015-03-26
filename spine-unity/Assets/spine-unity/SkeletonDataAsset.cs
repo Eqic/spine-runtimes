@@ -35,23 +35,28 @@ using UnityEngine;
 using Spine;
 
 public class SkeletonDataAsset : ScriptableObject {
-	public AtlasAsset atlasAsset;
+	public AtlasAsset[] atlasAssets;
+#if SPINE_TK2D
+	public tk2dSpriteCollectionData spriteCollection;
+#endif
 	public TextAsset skeletonJSON;
 	public float scale = 1;
 	public String[] fromAnimation;
 	public String[] toAnimation;
 	public float[] duration;
 	public float defaultMix;
+	public RuntimeAnimatorController controller;
 	private SkeletonData skeletonData;
 	private AnimationStateData stateData;
 
-	public void Reset () {
+	public void Reset() {
 		skeletonData = null;
 		stateData = null;
 	}
 
-	public SkeletonData GetSkeletonData (bool quiet) {
-		if (atlasAsset == null) {
+	public SkeletonData GetSkeletonData(bool quiet) {
+		if (atlasAssets == null) {
+			atlasAssets = new AtlasAsset[0];
 			if (!quiet)
 				Debug.LogError("Atlas not set for SkeletonData asset: " + name, this);
 			Reset();
@@ -65,17 +70,56 @@ public class SkeletonDataAsset : ScriptableObject {
 			return null;
 		}
 
-		Atlas atlas = atlasAsset.GetAtlas();
-		if (atlas == null) {
+#if !SPINE_TK2D
+		if (atlasAssets.Length == 0) {
 			Reset();
 			return null;
+		}
+#else
+		if (atlasAssets.Length == 0 && spriteCollection == null) {
+			Reset();
+			return null;
+		}
+#endif
+
+		Atlas[] atlasArr = new Atlas[atlasAssets.Length];
+		for (int i = 0; i < atlasAssets.Length; i++) {
+			if (atlasAssets[i] == null) {
+				Reset();
+				return null;
+			}
+			atlasArr[i] = atlasAssets[i].GetAtlas();
+			if (atlasArr[i] == null) {
+				Reset();
+				return null;
+			}
 		}
 
 		if (skeletonData != null)
 			return skeletonData;
 
-		SkeletonJson json = new SkeletonJson(atlas);
+		SkeletonJson json;
+
+#if !SPINE_TK2D
+		json = new SkeletonJson(atlasArr);
 		json.Scale = scale;
+#else
+		if (spriteCollection != null) {
+			json = new SkeletonJson(new SpriteCollectionAttachmentLoader(spriteCollection));
+			json.Scale = (1.0f / (spriteCollection.invOrthoSize * spriteCollection.halfTargetHeight) * scale) * 100f;
+		} else {
+			if (atlasArr.Length == 0) {
+				Reset();
+				if (!quiet)
+					Debug.LogError("Atlas not set for SkeletonData asset: " + name, this);
+				return null;
+			}
+			json = new SkeletonJson(atlasArr);
+			json.Scale = scale;
+		}
+#endif
+
+		
 		try {
 			skeletonData = json.ReadSkeletonData(new StringReader(skeletonJSON.text));
 		} catch (Exception ex) {
@@ -85,17 +129,24 @@ public class SkeletonDataAsset : ScriptableObject {
 		}
 
 		stateData = new AnimationStateData(skeletonData);
+		FillStateData();
+
+		return skeletonData;
+	}
+
+	public void FillStateData () {
+		if (stateData == null)
+			return;
+
 		stateData.DefaultMix = defaultMix;
 		for (int i = 0, n = fromAnimation.Length; i < n; i++) {
 			if (fromAnimation[i].Length == 0 || toAnimation[i].Length == 0)
 				continue;
 			stateData.SetMix(fromAnimation[i], toAnimation[i], duration[i]);
 		}
-
-		return skeletonData;
 	}
 
-	public AnimationStateData GetAnimationStateData () {
+	public AnimationStateData GetAnimationStateData() {
 		if (stateData != null)
 			return stateData;
 		GetSkeletonData(false);

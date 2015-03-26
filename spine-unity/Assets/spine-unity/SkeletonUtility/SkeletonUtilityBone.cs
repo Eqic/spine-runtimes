@@ -172,7 +172,7 @@ public class SkeletonUtilityBone : MonoBehaviour {
 			}
 
 			if (scale) {
-				cachedTransform.localScale = new Vector3(bone.scaleX, bone.scaleY, 1);
+				cachedTransform.localScale = new Vector3(bone.scaleX, bone.scaleY, bone.worldFlipX ? -1 : 1);
 
 				nonUniformScaleWarning = (bone.scaleX != bone.scaleY);
 			}
@@ -206,6 +206,7 @@ public class SkeletonUtilityBone : MonoBehaviour {
 						}
 
 						bone.Rotation = angle;
+						bone.RotationIK = angle;
 					}
 
 					if (scale) {
@@ -245,6 +246,7 @@ public class SkeletonUtilityBone : MonoBehaviour {
 						}
 
 						bone.Rotation = angle;
+						bone.RotationIK = angle;
 					}
 
 					//TODO: Something about this
@@ -283,6 +285,10 @@ public class SkeletonUtilityBone : MonoBehaviour {
 		euler.x = 0;
 		euler.y = bone.FlipX ? 180 : 0;
 		transform.localRotation = Quaternion.Euler(euler);
+	}
+
+	public void AddBoundingBox (string skinName, string slotName, string attachmentName) {
+		SkeletonUtility.AddBoundingBox(bone.skeleton, skinName, slotName, attachmentName, transform);
 	}
 
 	void OnDrawGizmos () {

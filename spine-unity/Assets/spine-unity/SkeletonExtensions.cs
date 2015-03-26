@@ -38,7 +38,7 @@ using System.Collections;
 using Spine;
 
 public static class SkeletonExtensions {
-	
+
 	public static void SetColor (this Slot slot, Color color) {
 		slot.A = color.a;
 		slot.R = color.r;
@@ -105,4 +105,30 @@ public static class SkeletonExtensions {
 		bone.Y = position.y;
 	}
 
+	public static Attachment AttachUnitySprite (this Skeleton skeleton, string slotName, Sprite sprite, string shaderName = "Spine/Skeleton") {
+		var att = sprite.ToRegionAttachment(shaderName);
+		skeleton.FindSlot(slotName).Attachment = att;
+
+		return att;
+	}
+
+	public static Attachment AddUnitySprite (this SkeletonData skeletonData, string slotName, Sprite sprite, string skinName = "", string shaderName = "Spine/Skeleton") {
+		var att = sprite.ToRegionAttachment(shaderName);
+
+		var slotIndex = skeletonData.FindSlotIndex(slotName);
+		Skin skin = skeletonData.defaultSkin;
+		if (skinName != "")
+			skin = skeletonData.FindSkin(skinName);
+
+		skin.AddAttachment(slotIndex, att.Name, att);
+
+		return att;
+	}
+
+	public static RegionAttachment ToRegionAttachment (this Sprite sprite, string shaderName = "Spine/Skeleton") {
+		var loader = new SpriteAttachmentLoader(sprite, Shader.Find(shaderName));
+		var att = loader.NewRegionAttachment(null, sprite.name, "");
+		loader = null;
+		return att;
+	}
 }

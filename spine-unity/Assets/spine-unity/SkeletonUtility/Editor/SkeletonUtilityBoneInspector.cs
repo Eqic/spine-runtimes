@@ -49,7 +49,10 @@ public class SkeletonUtilityBoneInspector : Editor {
 	SkeletonUtilityBone utilityBone;
 	SkeletonUtility skeletonUtility;
 	bool canCreateHingeChain = false;
-	
+
+	Dictionary<Slot, List<BoundingBoxAttachment>> boundingBoxTable = new Dictionary<Slot, List<BoundingBoxAttachment>>();
+	string currentSkinName = "";
+
 	void OnEnable () {
 		mode = this.serializedObject.FindProperty("mode");
 		boneName = this.serializedObject.FindProperty("boneName");
@@ -69,6 +72,43 @@ public class SkeletonUtilityBoneInspector : Editor {
 		}
 
 		canCreateHingeChain = CanCreateHingeChain();
+
+		boundingBoxTable.Clear();
+
+		if (multiObject)
+			return;
+
+		if (utilityBone.bone == null)
+			return;
+
+		var skeleton = utilityBone.bone.Skeleton;
+		int slotCount = skeleton.Slots.Count;
+		Skin skin = skeleton.Skin;
+		if (skeleton.Skin == null)
+			skin = skeleton.Data.DefaultSkin;
+
+		currentSkinName = skin.Name;
+		for(int i = 0; i < slotCount; i++){
+			Slot slot = skeletonUtility.skeletonRenderer.skeleton.Slots[i];
+			if (slot.Bone == utilityBone.bone) {
+				List<Attachment> attachments = new List<Attachment>();
+				
+					
+				skin.FindAttachmentsForSlot(skeleton.FindSlotIndex(slot.Data.Name), attachments);
+
+				List<BoundingBoxAttachment> boundingBoxes = new List<BoundingBoxAttachment>();
+				foreach (var att in attachments) {
+					if (att is BoundingBoxAttachment) {
+						boundingBoxes.Add((BoundingBoxAttachment)att);
+					}
+				}
+
+				if (boundingBoxes.Count > 0) {
+					boundingBoxTable.Add(slot, boundingBoxes);
+				}
+			}
+		}
+		
 	}
 
 	void EvaluateFlags () {
@@ -180,6 +220,25 @@ public class SkeletonUtilityBoneInspector : Editor {
 		}
 		GUILayout.EndHorizontal();
 
+		EditorGUI.BeginDisabledGroup(multiObject || boundingBoxTable.Count == 0);
+		EditorGUILayout.LabelField(new GUIContent("Bounding Boxes", SpineEditorUtilities.Icons.boundingBox), EditorStyles.boldLabel);
+
+		foreach(var entry in boundingBoxTable){
+			EditorGUI.indentLevel++;
+			EditorGUILayout.LabelField(entry.Key.Data.Name);
+			EditorGUI.indentLevel++;
+			foreach (var box in entry.Value) {
+				GUILayout.BeginHorizontal();
+				GUILayout.Space(30);
+				if (GUILayout.Button(box.Name, GUILayout.Width(200))) {
+					utilityBone.AddBoundingBox(currentSkinName, entry.Key.Data.Name, box.Name);
+				}
+				GUILayout.EndHorizontal();
+			}
+		}
+
+		EditorGUI.EndDisabledGroup();
+
 		serializedObject.ApplyModifiedProperties();
 	}
 
@@ -246,7 +305,7 @@ public class SkeletonUtilityBoneInspector : Editor {
 	bool CanCreateHingeChain () {
 		if (utilityBone == null)
 			return false;
-		if (utilityBone.rigidbody != null)
+		if (utilityBone.GetComponent<Rigidbody>() != null)
 			return false;
 		if (utilityBone.bone != null && utilityBone.bone.Children.Count == 0)
 			return false;
@@ -266,7 +325,7 @@ public class SkeletonUtilityBoneInspector : Editor {
 			AttachRigidbody(utilBone);
 		}
 
-		utilityBone.rigidbody.isKinematic = true;
+		utilityBone.GetComponent<Rigidbody>().isKinematic = true;
 
 		foreach (var utilBone in utilBoneArr) {
 			if (utilBone == utilityBone)
@@ -276,13 +335,13 @@ public class SkeletonUtilityBoneInspector : Editor {
 
 			HingeJoint joint = utilBone.gameObject.AddComponent<HingeJoint>();
 			joint.axis = Vector3.forward;
-			joint.connectedBody = utilBone.transform.parent.rigidbody;
+			joint.connectedBody = utilBone.transform.parent.GetComponent<Rigidbody>();
 			joint.useLimits = true;
 			JointLimits limits = new JointLimits();
 			limits.min = -20;
 			limits.max = 20;
 			joint.limits = limits;
-			utilBone.rigidbody.mass = utilBone.transform.parent.rigidbody.mass * 0.75f;
+			utilBone.GetComponent<Rigidbody>().mass = utilBone.transform.parent.GetComponent<Rigidbody>().mass * 0.75f;
 		}
 	}
 	
