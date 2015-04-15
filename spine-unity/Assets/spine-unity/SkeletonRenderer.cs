@@ -59,7 +59,7 @@ public class SkeletonRenderer : MonoBehaviour {
 	[HideInInspector]
 	public List<Slot> submeshSeparatorSlots = new List<Slot>();
 
-
+	private MeshRenderer meshRenderer;
 	private MeshFilter meshFilter;
 	private Mesh mesh1, mesh2;
 	private bool useMesh1;
@@ -76,8 +76,9 @@ public class SkeletonRenderer : MonoBehaviour {
 	public virtual void Reset () {
 		if (meshFilter != null)
 			meshFilter.sharedMesh = null;
-		if (GetComponent<Renderer>() != null)
-			GetComponent<Renderer>().sharedMaterial = null;
+
+		meshRenderer = GetComponent<MeshRenderer>();
+		if (meshRenderer != null) meshRenderer.sharedMaterial = null;
 
 		if (mesh1 != null) {
 			if (Application.isPlaying)
@@ -237,7 +238,7 @@ public class SkeletonRenderer : MonoBehaviour {
 			submeshMaterials.CopyTo(sharedMaterials);
 		else
 			sharedMaterials = submeshMaterials.ToArray();
-		GetComponent<Renderer>().sharedMaterials = sharedMaterials;
+		meshRenderer.sharedMaterials = sharedMaterials;
 
 		// Ensure mesh data is the right size.
 		Vector3[] vertices = this.vertices;
@@ -282,8 +283,7 @@ public class SkeletonRenderer : MonoBehaviour {
 				color.r = (byte)(r * slot.r * regionAttachment.r * color.a);
 				color.g = (byte)(g * slot.g * regionAttachment.g * color.a);
 				color.b = (byte)(b * slot.b * regionAttachment.b * color.a);
-				if (slot.data.additiveBlending)
-					color.a = 0;
+				if (slot.data.blendMode == BlendMode.additive) color.a = 0;
 				colors[vertexIndex] = color;
 				colors[vertexIndex + 1] = color;
 				colors[vertexIndex + 2] = color;
@@ -310,8 +310,7 @@ public class SkeletonRenderer : MonoBehaviour {
 					color.r = (byte)(r * slot.r * meshAttachment.r * color.a);
 					color.g = (byte)(g * slot.g * meshAttachment.g * color.a);
 					color.b = (byte)(b * slot.b * meshAttachment.b * color.a);
-					if (slot.data.additiveBlending)
-						color.a = 0;
+					if (slot.data.blendMode == BlendMode.additive) color.a = 0;
 
 					float[] meshUVs = meshAttachment.uvs;
 					float z = i * zSpacing;
@@ -331,8 +330,7 @@ public class SkeletonRenderer : MonoBehaviour {
 					color.r = (byte)(r * slot.r * meshAttachment.r * color.a);
 					color.g = (byte)(g * slot.g * meshAttachment.g * color.a);
 					color.b = (byte)(b * slot.b * meshAttachment.b * color.a);
-					if (slot.data.additiveBlending)
-						color.a = 0;
+					if (slot.data.blendMode == BlendMode.additive) color.a = 0;
 
 					float[] meshUVs = meshAttachment.uvs;
 					float z = i * zSpacing;
@@ -379,11 +377,11 @@ public class SkeletonRenderer : MonoBehaviour {
 		}
 
 		if (submeshRenderers.Length > 0) {
-			foreach (var smr in submeshRenderers) {
-				if (smr.submeshIndex < sharedMaterials.Length)
-					smr.SetMesh(this.renderer, useMesh1 ? mesh1 : mesh2, sharedMaterials[smr.submeshIndex]);
+			foreach (var submeshRenderer in submeshRenderers) {
+				if (submeshRenderer.submeshIndex < sharedMaterials.Length)
+					submeshRenderer.SetMesh(meshRenderer, useMesh1 ? mesh1 : mesh2, sharedMaterials[submeshRenderer.submeshIndex]);
 				else
-					smr.GetComponent<Renderer>().enabled = false;
+					submeshRenderer.GetComponent<Renderer>().enabled = false;
 			}
 		}
 
