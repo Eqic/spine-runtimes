@@ -55,3 +55,87 @@ void _spAttachment_deinit (spAttachment* self) {
 void spAttachment_dispose (spAttachment* self) {
 	VTABLE(spAttachment, self) ->dispose(self);
 }
+
+
+spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* );
+spBoundingBoxAttachment* spBoundingBoxAttachment_clone( spBoundingBoxAttachment* );
+spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* );
+spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* );
+
+spAttachment* spAttachment_clone( spAttachment* source )
+{
+  spAttachment* self = 0;
+  if ( source->type == SP_ATTACHMENT_REGION )
+  {
+    spRegionAttachment* copy = spRegionAttachment_clone( SUB_CAST( spRegionAttachment, source ) );
+    self = &(copy->super);
+  }
+  else if ( source->type == SP_ATTACHMENT_BOUNDING_BOX )
+  {
+    spBoundingBoxAttachment* copy = spBoundingBoxAttachment_clone( SUB_CAST( spBoundingBoxAttachment, source ) );
+    self = &(copy->super);
+  }
+  else if ( source->type == SP_ATTACHMENT_MESH )
+  {
+    spMeshAttachment* copy = spMeshAttachment_clone( SUB_CAST( spMeshAttachment, source ) );
+    self = &(copy->super);
+  }
+  else if ( source->type == SP_ATTACHMENT_SKINNED_MESH )
+  {
+    spSkinnedMeshAttachment* copy = spSkinnedMeshAttachment_clone( SUB_CAST( spSkinnedMeshAttachment, source ) );
+    self = &(copy->super);
+  }
+  
+  return self;
+}
+
+spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
+{
+  spRegionAttachment* self = spRegionAttachment_create( source->super.name );
+  
+  MALLOC_STR( self->path, source->path );
+  self->rendererObject = source->rendererObject;
+  
+  self->regionOffsetX         = source->regionOffsetX;
+  self->regionOffsetY         = source->regionOffsetY;
+  self->regionWidth           = source->regionWidth;
+  self->regionHeight          = source->regionHeight;
+  self->regionOriginalWidth   = source->regionOriginalWidth;
+  self->regionOriginalHeight  = source->regionOriginalHeight;
+  
+  self->x         = source->x;
+  self->y         = source->y;
+  self->scaleX    = source->scaleX;
+  self->scaleY    = source->scaleY;
+  self->rotation  = source->rotation;
+  self->width     = source->width;
+  self->height    = source->height;
+  
+  self->r = source->r;
+  self->g = source->g;
+  self->b = source->b;
+  self->a = source->a;
+  
+  for ( int i = 0; i < 8; ++i )
+  {
+    self->offset[ i ] = source->offset[ i ];
+    self->uvs[ i ]    = source->uvs[ i ];
+  }
+  
+  return self;
+}
+
+spBoundingBoxAttachment* spBoundingBoxAttachment_clone( spBoundingBoxAttachment* source )
+{
+  return 0;
+}
+
+spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* source )
+{
+  return 0;
+}
+
+spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* source )
+{
+  return 0;
+}

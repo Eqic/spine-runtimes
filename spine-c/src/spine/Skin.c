@@ -118,3 +118,73 @@ void spSkin_attachAll (const spSkin* self, spSkeleton* skeleton, const spSkin* o
 		entry = entry->next;
 	}
 }
+
+
+_Entry* spSkin_findEntry( const spSkin* self, int slotIndex, const char* name )
+{
+  _Entry* entry = SUB_CAST(_spSkin, self)->entries;
+  
+  while ( entry )
+  {
+    if ( entry->slotIndex == slotIndex && strcmp( entry->name, name ) == 0 )
+      return entry;
+    
+    entry = entry->next;
+  }
+  
+  return 0;
+}
+
+spSkin* spSkin_clone( const char* name, const spSkin* source )
+{
+  spSkin* self = spSkin_create( name );
+  
+  const _Entry* entry = SUB_CAST( _spSkin, source )->entries;
+  while ( entry )
+  {
+    spAttachment* attachment = spAttachment_clone( entry->attachment );
+    spSkin_addAttachment( self, entry->slotIndex, entry->name, attachment );
+    entry = entry->next;
+  }
+  
+  return self;
+}
+
+void spSkin_join( spSkin* self, const spSkin* source )
+{
+  const _Entry* entry = SUB_CAST( _spSkin, source )->entries;
+  while ( entry )
+  {
+    spAttachment* exist = spSkin_getAttachment( self, entry->slotIndex, entry->name );
+    if ( ! exist )
+    {
+      spAttachment* attachment = spAttachment_clone( entry->attachment );
+      spSkin_addAttachment( self, entry->slotIndex, entry->name, attachment );
+    }
+    
+    entry = entry->next;
+  }
+}
+
+void spSkin_merge( spSkin* self, const spSkin* source )
+{
+  const _Entry* entry = SUB_CAST( _spSkin, source )->entries;
+  while ( entry )
+  {
+    _Entry* existEntry = spSkin_findEntry( self, entry->slotIndex, entry->name );
+    if ( existEntry == NULL )
+    {
+    // APPEND
+      spAttachment* attachment = spAttachment_clone( entry->attachment );
+      spSkin_addAttachment( self, entry->slotIndex, entry->name, attachment );
+    }
+    else
+    {
+    // UPDATE
+      spAttachment_dispose( existEntry->attachment );
+      existEntry->attachment = spAttachment_clone( entry->attachment );
+    }
+    
+    entry = entry->next;
+  }
+}

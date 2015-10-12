@@ -64,6 +64,15 @@ const char* spSkin_getAttachmentName (const spSkin* self, int slotIndex, int att
 /** Attach each attachment in this skin if the corresponding attachment in oldSkin is currently attached. */
 void spSkin_attachAll (const spSkin* self, struct spSkeleton* skeleton, const spSkin* oldspSkin);
 
+/* source를 복제 (name은 별도로) */
+spSkin* spSkin_clone( const char* name, const spSkin* source );
+
+/* source의 entry 중, self 에 없는 것만 복사 */
+void spSkin_join( spSkin* self, const spSkin* source );
+
+/* source의 entry 를 모두 복제 (존재하면 덮어씀) */
+void spSkin_merge( spSkin* self, const spSkin* source );
+
 #ifdef SPINE_SHORT_NAMES
 typedef spSkin Skin;
 #define Skin_create(...) spSkin_create(__VA_ARGS__)

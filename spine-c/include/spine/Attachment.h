@@ -56,6 +56,9 @@ typedef struct spAttachment {
 
 void spAttachment_dispose (spAttachment* self);
 
+/** copy attachment **/
+spAttachment* spAttachment_clone( spAttachment* source );
+
 #ifdef SPINE_SHORT_NAMES
 typedef spAttachmentType AttachmentType;
 #define ATTACHMENT_REGION SP_ATTACHMENT_REGION
