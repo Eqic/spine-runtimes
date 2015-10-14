@@ -116,7 +116,8 @@ spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
   self->b = source->b;
   self->a = source->a;
   
-  for ( int i = 0; i < 8; ++i )
+  int i;
+  for ( i = 0; i < 8; ++i )
   {
     self->offset[ i ] = source->offset[ i ];
     self->uvs[ i ]    = source->uvs[ i ];
