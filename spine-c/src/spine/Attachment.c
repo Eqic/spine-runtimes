@@ -33,6 +33,9 @@
 #include <spine/extension.h>
 #include <spine/Slot.h>
 
+#include <spine/MeshAttachment.h>
+#include <spine/SkinnedMeshAttachment.h>
+
 typedef struct _spAttachmentVtable {
 	void (*dispose) (spAttachment* self);
 } _spAttachmentVtable;
@@ -128,15 +131,71 @@ spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
 
 spBoundingBoxAttachment* spBoundingBoxAttachment_clone( spBoundingBoxAttachment* source )
 {
-  return 0;
+  spBoundingBoxAttachment* self = spBoundingBoxAttachment_create( source->super.name );
+  return self;
 }
 
 spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* source )
 {
-  return 0;
+  spMeshAttachment* attachment = spMeshAttachment_create( source->super.name );
+  attachment->rendererObject = source->rendererObject;
+  attachment->regionU = source->regionU;
+  attachment->regionV = source->regionV;
+  attachment->regionU2 = source->regionU2;
+  attachment->regionV2 = source->regionV2;
+  attachment->regionRotate = source->regionRotate;
+  attachment->regionOffsetX = source->regionOffsetX;
+  attachment->regionOffsetY = source->regionOffsetY;
+  attachment->regionWidth = source->regionWidth;
+  attachment->regionHeight = source->regionHeight;
+  attachment->regionOriginalWidth = source->regionOriginalWidth;
+  attachment->regionOriginalHeight = source->regionOriginalHeight;
+  
+  if ( source->path != NULL )
+  {
+    size_t sizeInBytes = sizeof( char ) * ( strlen( source->path ) + 1 );
+    attachment->path = malloc( sizeInBytes );
+    memcpy( (void*)attachment->path, source->path, sizeInBytes );
+  }
+  
+  return attachment;
+  
+//  self->vertices = NULL;
+//  self->regionUVs = NULL;
+//  self->uvs = NULL;
+//  self->triangles = NULL;
+//  self->edges = NULL;
 }
 
 spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* source )
 {
-  return 0;
+  spSkinnedMeshAttachment* attachment = spSkinnedMeshAttachment_create( source->super.name );
+  attachment->rendererObject = source->rendererObject;
+  attachment->regionU = source->regionU;
+  attachment->regionV = source->regionV;
+  attachment->regionU2 = source->regionU2;
+  attachment->regionV2 = source->regionV2;
+  attachment->regionRotate = source->regionRotate;
+  attachment->regionOffsetX = source->regionOffsetX;
+  attachment->regionOffsetY = source->regionOffsetY;
+  attachment->regionWidth = source->regionWidth;
+  attachment->regionHeight = source->regionHeight;
+  attachment->regionOriginalWidth = source->regionOriginalWidth;
+  attachment->regionOriginalHeight = source->regionOriginalHeight;
+  
+  if ( source->path != NULL )
+  {
+    size_t sizeInBytes = sizeof( char ) * ( strlen( source->path ) + 1 );
+    attachment->path = malloc( sizeInBytes );
+    memcpy( (void*)attachment->path, source->path, sizeInBytes );
+  }
+  
+  return attachment;
+  
+//  self->bones = NULL;
+//  self->weights = NULL;
+//  self->triangles = NULL;
+//  self->regionUVs = NULL;
+//  self->uvs = NULL;
+//  self->edges = NULL;
 }
