@@ -34,7 +34,7 @@
 #include <spine/Slot.h>
 
 #include <spine/MeshAttachment.h>
-#include <spine/SkinnedMeshAttachment.h>
+#include <spine/WeightedMeshAttachment.h>
 
 typedef struct _spAttachmentVtable {
 	void (*dispose) (spAttachment* self);
@@ -63,7 +63,7 @@ void spAttachment_dispose (spAttachment* self) {
 spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* );
 spBoundingBoxAttachment* spBoundingBoxAttachment_clone( spBoundingBoxAttachment* );
 spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* );
-spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* );
+spWeightedMeshAttachment* spWeightedMeshAttachment_clone( spWeightedMeshAttachment* );
 
 spAttachment* spAttachment_clone( spAttachment* source )
 {
@@ -83,9 +83,9 @@ spAttachment* spAttachment_clone( spAttachment* source )
     spMeshAttachment* copy = spMeshAttachment_clone( SUB_CAST( spMeshAttachment, source ) );
     self = &(copy->super);
   }
-  else if ( source->type == SP_ATTACHMENT_SKINNED_MESH )
+  else if ( source->type == SP_ATTACHMENT_WEIGHTED_MESH )
   {
-    spSkinnedMeshAttachment* copy = spSkinnedMeshAttachment_clone( SUB_CAST( spSkinnedMeshAttachment, source ) );
+    spWeightedMeshAttachment* copy = spWeightedMeshAttachment_clone( SUB_CAST( spWeightedMeshAttachment, source ) );
     self = &(copy->super);
   }
   
@@ -235,9 +235,9 @@ spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* source )
   return self;
 }
 
-spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* source )
+spWeightedMeshAttachment* spWeightedMeshAttachment_clone( spWeightedMeshAttachment* source )
 {
-  spSkinnedMeshAttachment* self = spSkinnedMeshAttachment_create( source->super.name );
+  spWeightedMeshAttachment* self = spWeightedMeshAttachment_create( source->super.name );
   self->rendererObject = source->rendererObject;
   self->r = source->r;
   self->g = source->g;

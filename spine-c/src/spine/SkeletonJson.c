@@ -811,8 +811,13 @@ spSkeletonData* spSkeletonJson_readSkeletonData (spSkeletonJson* self, const cha
 	if (animations) {
 		Json *animationMap;
 		skeletonData->animations = MALLOC(spAnimation*, animations->size);
-		for (animationMap = animations->child; animationMap; animationMap = animationMap->next)
-			_spSkeletonJson_readAnimation(self, animationMap, skeletonData);
+		for (animationMap = animations->child; animationMap; animationMap = animationMap->next) {
+			spAnimation* animation = _spSkeletonJson_readAnimation(self, animationMap, skeletonData);
+			if (!animation) {
+				skeletonData->animationsCount -= 1;
+				skeletonData->animations[skeletonData->animationsCount] = 0;
+			}
+		}
 	}
 
 	Json_dispose(root);
