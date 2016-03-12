@@ -95,9 +95,11 @@ spAttachment* spAttachment_clone( spAttachment* source )
 spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
 {
   spRegionAttachment* self = spRegionAttachment_create( source->super.name );
-  
-  MALLOC_STR( self->path, source->path );
   self->rendererObject = source->rendererObject;
+  self->r = source->r;
+  self->g = source->g;
+  self->b = source->b;
+  self->a = source->a;
   
   self->regionOffsetX         = source->regionOffsetX;
   self->regionOffsetY         = source->regionOffsetY;
@@ -114,17 +116,20 @@ spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
   self->width     = source->width;
   self->height    = source->height;
   
-  self->r = source->r;
-  self->g = source->g;
-  self->b = source->b;
-  self->a = source->a;
-  
-  int i;
-  for ( i = 0; i < 8; ++i )
+  // path
+  //
+  self->path = NULL;
+  if ( source->path != NULL )
   {
-    self->offset[ i ] = source->offset[ i ];
-    self->uvs[ i ]    = source->uvs[ i ];
+    size_t sizeInBytes = sizeof( char ) * ( strlen( source->path ) + 1 );
+    self->path = malloc( sizeInBytes );
+    memcpy( (void*)self->path, source->path, sizeInBytes );
   }
+  
+  // offset, uvs
+  //
+  memcpy( self->offset, source->offset, ( sizeof( float ) * 8 ) );
+  memcpy( self->uvs, source->uvs, ( sizeof( float ) * 8 ) );
   
   return self;
 }
@@ -132,70 +137,195 @@ spRegionAttachment* spRegionAttachment_clone( spRegionAttachment* source )
 spBoundingBoxAttachment* spBoundingBoxAttachment_clone( spBoundingBoxAttachment* source )
 {
   spBoundingBoxAttachment* self = spBoundingBoxAttachment_create( source->super.name );
+  
+  // vertices, verticesCount
+  //
+  self->verticesCount = source->verticesCount;
+  self->vertices = NULL;
+  if ( source->vertices != NULL )
+  {
+    self->vertices = MALLOC( float, source->verticesCount );
+    memcpy( self->vertices, source->vertices, ( sizeof( float ) * source->verticesCount ) );
+  }
+  
   return self;
 }
 
 spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* source )
 {
-  spMeshAttachment* attachment = spMeshAttachment_create( source->super.name );
-  attachment->rendererObject = source->rendererObject;
-  attachment->regionU = source->regionU;
-  attachment->regionV = source->regionV;
-  attachment->regionU2 = source->regionU2;
-  attachment->regionV2 = source->regionV2;
-  attachment->regionRotate = source->regionRotate;
-  attachment->regionOffsetX = source->regionOffsetX;
-  attachment->regionOffsetY = source->regionOffsetY;
-  attachment->regionWidth = source->regionWidth;
-  attachment->regionHeight = source->regionHeight;
-  attachment->regionOriginalWidth = source->regionOriginalWidth;
-  attachment->regionOriginalHeight = source->regionOriginalHeight;
+  spMeshAttachment* self = spMeshAttachment_create( source->super.name );
+  self->rendererObject = source->rendererObject;
+  self->r = source->r;
+  self->g = source->g;
+  self->b = source->b;
+  self->a = source->a;
   
+  self->regionU = source->regionU;
+  self->regionV = source->regionV;
+  self->regionU2 = source->regionU2;
+  self->regionV2 = source->regionV2;
+  self->regionRotate = source->regionRotate;
+  self->regionOffsetX = source->regionOffsetX;
+  self->regionOffsetY = source->regionOffsetY;
+  self->regionWidth = source->regionWidth;
+  self->regionHeight = source->regionHeight;
+  self->regionOriginalWidth = source->regionOriginalWidth;
+  self->regionOriginalHeight = source->regionOriginalHeight;
+  
+  self->hullLength = source->hullLength;
+  self->width   = source->width;
+  self->height  = source->height;
+  
+  // path
+  //
+  self->path = NULL;
   if ( source->path != NULL )
   {
     size_t sizeInBytes = sizeof( char ) * ( strlen( source->path ) + 1 );
-    attachment->path = malloc( sizeInBytes );
-    memcpy( (void*)attachment->path, source->path, sizeInBytes );
+    self->path = malloc( sizeInBytes );
+    memcpy( (void*)self->path, source->path, sizeInBytes );
   }
   
-  return attachment;
+  // vertices, verticesCount
+  //
+  self->verticesCount = source->verticesCount;
+  self->vertices = NULL;
+  if ( source->vertices != NULL )
+  {
+    self->vertices = MALLOC( float, source->verticesCount );
+    memcpy( self->vertices, source->vertices, ( sizeof( float ) * source->verticesCount ) );
+  }
   
-//  self->vertices = NULL;
-//  self->regionUVs = NULL;
-//  self->uvs = NULL;
-//  self->triangles = NULL;
-//  self->edges = NULL;
+  // regionUVs, uvs
+  //
+  self->regionUVs = NULL;
+  if ( source->regionUVs != NULL )
+  {
+    self->regionUVs = MALLOC( float, source->verticesCount );
+    memcpy( self->regionUVs, source->regionUVs, ( sizeof( float ) * source->verticesCount ) );
+  }
+  
+  self->uvs = NULL;
+  if ( source->uvs != NULL )
+  {
+    self->uvs = MALLOC( float, source->verticesCount );
+    memcpy( self->uvs, source->uvs, ( sizeof( float ) * source->verticesCount ) );
+  }
+  
+  // triangles, trianglesCount
+  //
+  self->trianglesCount = source->trianglesCount;
+  self->triangles = NULL;
+  if ( source->triangles != NULL )
+  {
+    self->triangles = MALLOC( int, source->trianglesCount );
+    memcpy( self->triangles, source->triangles, ( sizeof( int ) * source->trianglesCount ) );
+  }
+  
+  // edges, edgesCount
+  //
+  self->edgesCount = source->edgesCount;
+  self->edges = NULL;
+  if ( source->edges != NULL )
+  {
+    self->edges = MALLOC( int, source->edgesCount );
+    memcpy( self->edges, source->edges, ( sizeof( int ) * source->edgesCount ) );
+  }
+  
+  return self;
 }
 
 spSkinnedMeshAttachment* spSkinnedMeshAttachment_clone( spSkinnedMeshAttachment* source )
 {
-  spSkinnedMeshAttachment* attachment = spSkinnedMeshAttachment_create( source->super.name );
-  attachment->rendererObject = source->rendererObject;
-  attachment->regionU = source->regionU;
-  attachment->regionV = source->regionV;
-  attachment->regionU2 = source->regionU2;
-  attachment->regionV2 = source->regionV2;
-  attachment->regionRotate = source->regionRotate;
-  attachment->regionOffsetX = source->regionOffsetX;
-  attachment->regionOffsetY = source->regionOffsetY;
-  attachment->regionWidth = source->regionWidth;
-  attachment->regionHeight = source->regionHeight;
-  attachment->regionOriginalWidth = source->regionOriginalWidth;
-  attachment->regionOriginalHeight = source->regionOriginalHeight;
+  spSkinnedMeshAttachment* self = spSkinnedMeshAttachment_create( source->super.name );
+  self->rendererObject = source->rendererObject;
+  self->r = source->r;
+  self->g = source->g;
+  self->b = source->b;
+  self->a = source->a;
   
+  self->regionU = source->regionU;
+  self->regionV = source->regionV;
+  self->regionU2 = source->regionU2;
+  self->regionV2 = source->regionV2;
+  self->regionRotate = source->regionRotate;
+  self->regionOffsetX = source->regionOffsetX;
+  self->regionOffsetY = source->regionOffsetY;
+  self->regionWidth = source->regionWidth;
+  self->regionHeight = source->regionHeight;
+  self->regionOriginalWidth = source->regionOriginalWidth;
+  self->regionOriginalHeight = source->regionOriginalHeight;
+  
+  self->hullLength = source->hullLength;
+  self->width   = source->width;
+  self->height  = source->height;
+  
+  // path
+  //
+  self->path = NULL;
   if ( source->path != NULL )
   {
     size_t sizeInBytes = sizeof( char ) * ( strlen( source->path ) + 1 );
-    attachment->path = malloc( sizeInBytes );
-    memcpy( (void*)attachment->path, source->path, sizeInBytes );
+    self->path = malloc( sizeInBytes );
+    memcpy( (void*)self->path, source->path, sizeInBytes );
   }
   
-  return attachment;
+  // bones, bonesCount
+  //
+  self->bonesCount = source->bonesCount;
+  self->bones = NULL;
+  if ( source->bones != NULL )
+  {
+    self->bones = MALLOC( int, source->bonesCount );
+    memcpy( self->bones, source->bones, ( sizeof( int ) * source->bonesCount ) );
+  }
   
-//  self->bones = NULL;
-//  self->weights = NULL;
-//  self->triangles = NULL;
-//  self->regionUVs = NULL;
-//  self->uvs = NULL;
-//  self->edges = NULL;
+  // weights, weightsCount
+  //
+  self->weightsCount = source->weightsCount;
+  self->weights = NULL;
+  if ( source->weights != NULL )
+  {
+    self->weights = MALLOC( float, source->weightsCount );
+    memcpy( self->weights, source->weights, ( sizeof( float ) * source->weightsCount ) );
+  }
+  
+  // triangles, trianglesCount
+  //
+  self->trianglesCount = source->trianglesCount;
+  self->triangles = NULL;
+  if ( source->triangles != NULL )
+  {
+    self->triangles = MALLOC( int, source->trianglesCount );
+    memcpy( self->triangles, source->triangles, ( sizeof( int ) * source->trianglesCount ) );
+  }
+  
+  // regionUVs, uvs, uvsCount
+  //
+  self->uvsCount = source->uvsCount;
+  self->regionUVs = NULL;
+  if ( source->regionUVs != NULL )
+  {
+    self->regionUVs = MALLOC( float, source->uvsCount );
+    memcpy( self->regionUVs, source->regionUVs, ( sizeof( float ) * source->uvsCount ) );
+  }
+  
+  self->uvs = NULL;
+  if ( source->uvs != NULL )
+  {
+    self->uvs = MALLOC( float, source->uvsCount );
+    memcpy( self->uvs, source->uvs, ( sizeof( float ) * source->uvsCount ) );
+  }
+  
+  // edges, edgesCount
+  //
+  self->edgesCount = source->edgesCount;
+  self->edges = NULL;
+  if ( source->edges != NULL )
+  {
+    self->edges = MALLOC( int, source->edgesCount );
+    memcpy( self->edges, source->edges, ( sizeof( int ) * source->edgesCount ) );
+  }
+  
+  return self;
 }
