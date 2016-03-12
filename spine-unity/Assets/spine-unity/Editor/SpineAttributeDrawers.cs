@@ -5,17 +5,19 @@
 *****************************************************************************/
 using UnityEngine;
 using UnityEditor;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Spine;
 
 
+
 public struct SpineDrawerValuePair {
 	public string str;
 	public SerializedProperty property;
 
-	public SpineDrawerValuePair(string val, SerializedProperty property) {
+	public SpineDrawerValuePair (string val, SerializedProperty property) {
 		this.str = val;
 		this.property = property;
 	}
@@ -23,6 +25,8 @@ public struct SpineDrawerValuePair {
 
 public abstract class SpineTreeItemDrawerBase<T> : PropertyDrawer where T:SpineAttributeBase {
 	protected SkeletonDataAsset skeletonDataAsset;
+	internal const string NoneLabel = "<None>";
+
 	protected T TargetAttribute { get { return (T)attribute; } }
 
 	public override void OnGUI (Rect position, SerializedProperty property, GUIContent label) {
@@ -59,8 +63,9 @@ public abstract class SpineTreeItemDrawerBase<T> : PropertyDrawer where T:SpineA
 		}
 		
 		position = EditorGUI.PrefixLabel(position, label);
-		
-		if (GUI.Button(position, property.stringValue, EditorStyles.popup)) {
+
+		var propertyStringValue = property.stringValue;
+		if (GUI.Button(position, string.IsNullOrEmpty(propertyStringValue) ? NoneLabel : propertyStringValue, EditorStyles.popup)) {
 			Selector(property);
 		}
 		
@@ -72,7 +77,7 @@ public abstract class SpineTreeItemDrawerBase<T> : PropertyDrawer where T:SpineA
 			return;
 		
 		GenericMenu menu = new GenericMenu();
-		PopulateMenu (menu, property, this.TargetAttribute, data);
+		PopulateMenu(menu, property, this.TargetAttribute, data);
 		menu.ShowAsContext();
 	}
 
@@ -84,7 +89,7 @@ public abstract class SpineTreeItemDrawerBase<T> : PropertyDrawer where T:SpineA
 		pair.property.serializedObject.ApplyModifiedProperties();
 	}
 
-	public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
+	public override float GetPropertyHeight (SerializedProperty property, GUIContent label) {
 		return 18;
 	}
 
@@ -96,7 +101,7 @@ public class SpineSlotDrawer : SpineTreeItemDrawerBase<SpineSlot> {
 	protected override void PopulateMenu (GenericMenu menu, SerializedProperty property, SpineSlot targetAttribute, SkeletonData data) {
 		for (int i = 0; i < data.Slots.Count; i++) {
 			string name = data.Slots.Items[i].Name;
-			if (name.StartsWith(targetAttribute.startsWith)) {
+			if (name.StartsWith(targetAttribute.startsWith, StringComparison.Ordinal)) {
 				if (targetAttribute.containsBoundingBoxes) {
 					
 					int slotIndex = i;
@@ -139,7 +144,7 @@ public class SpineSkinDrawer : SpineTreeItemDrawerBase<SpineSkin> {
 		
 		for (int i = 0; i < data.Skins.Count; i++) {
 			string name = data.Skins.Items[i].Name;
-			if (name.StartsWith(targetAttribute.startsWith))
+			if (name.StartsWith(targetAttribute.startsWith, StringComparison.Ordinal))
 				menu.AddItem(new GUIContent(name), name == property.stringValue, HandleSelect, new SpineDrawerValuePair(name, property));
 		}
 	}
@@ -150,9 +155,13 @@ public class SpineSkinDrawer : SpineTreeItemDrawerBase<SpineSkin> {
 public class SpineAnimationDrawer : SpineTreeItemDrawerBase<SpineAnimation> {
 	protected override void PopulateMenu (GenericMenu menu, SerializedProperty property, SpineAnimation targetAttribute, SkeletonData data) {
 		var animations = skeletonDataAsset.GetAnimationStateData().SkeletonData.Animations;
+
+		// <None> item
+		menu.AddItem(new GUIContent(NoneLabel), string.IsNullOrEmpty(property.stringValue), HandleSelect, new SpineDrawerValuePair("", property));
+
 		for (int i = 0; i < animations.Count; i++) {
 			string name = animations.Items[i].Name;
-			if (name.StartsWith(targetAttribute.startsWith))
+			if (name.StartsWith(targetAttribute.startsWith, StringComparison.Ordinal))
 				menu.AddItem(new GUIContent(name), name == property.stringValue, HandleSelect, new SpineDrawerValuePair(name, property));
 		}
 	}
@@ -165,7 +174,7 @@ public class SpineEventNameDrawer : SpineTreeItemDrawerBase<SpineEvent> {
 		var events = skeletonDataAsset.GetSkeletonData(false).Events;
 		for (int i = 0; i < events.Count; i++) {
 			string name = events.Items[i].Name;
-			if (name.StartsWith(targetAttribute.startsWith))
+			if (name.StartsWith(targetAttribute.startsWith, StringComparison.Ordinal))
 				menu.AddItem(new GUIContent(name), name == property.stringValue, HandleSelect, new SpineDrawerValuePair(name, property));
 		}
 	}
@@ -178,14 +187,11 @@ public class SpineAttachmentDrawer : SpineTreeItemDrawerBase<SpineAttachment> {
 		List<Skin> validSkins = new List<Skin>();
 		SkeletonRenderer skeletonRenderer = null;
 
-		if (property.serializedObject.targetObject is Component) {
-			var component = (Component)property.serializedObject.targetObject;
+		var component = property.serializedObject.targetObject as Component;
+		if (component != null) {
 			if (component.GetComponentInChildren<SkeletonRenderer>() != null) {
 				skeletonRenderer = component.GetComponentInChildren<SkeletonRenderer>();
-				if (skeletonDataAsset != skeletonRenderer.skeletonDataAsset) {
-					Debug.LogError("DataField SkeletonDataAsset and SkeletonRenderer/SkeletonAnimation's SkeletonDataAsset do not match. Remove the explicit dataField parameter of your [SpineAttachment] field.");
-				}
-
+				//if (skeletonDataAsset != skeletonRenderer.skeletonDataAsset) Debug.LogWarning("DataField SkeletonDataAsset and SkeletonRenderer/SkeletonAnimation's SkeletonDataAsset do not match. Remove the explicit dataField parameter of your [SpineAttachment] field.");
 				skeletonDataAsset = skeletonRenderer.skeletonDataAsset;
 			}
 		}
@@ -212,9 +218,11 @@ public class SpineAttachmentDrawer : SpineTreeItemDrawerBase<SpineAttachment> {
 			menu.AddDisabledItem(new GUIContent(skeletonRenderer.gameObject.name + " (SkeletonRenderer)"));
 		else
 			menu.AddDisabledItem(new GUIContent(skeletonDataAsset.name));
+		
 		menu.AddSeparator("");
 		
 		menu.AddItem(new GUIContent("Null"), property.stringValue == "", HandleSelect, new SpineDrawerValuePair("", property));
+
 		menu.AddSeparator("");
 		
 		Skin defaultSkin = data.Skins.Items[0];
@@ -290,8 +298,8 @@ public class SpineBoneDrawer : SpineTreeItemDrawerBase<SpineBone> {
 public class SpineAtlasRegionDrawer : PropertyDrawer {
 	Component component;
 	SerializedProperty atlasProp;
-	
-	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+
+	public override void OnGUI (Rect position, SerializedProperty property, GUIContent label) {
 		if (property.propertyType != SerializedPropertyType.String) {
 			EditorGUI.LabelField(position, "ERROR:", "May only apply to type string");
 			return;
@@ -322,7 +330,7 @@ public class SpineAtlasRegionDrawer : PropertyDrawer {
 		}
 		
 	}
-	
+
 	void Selector (SerializedProperty property) {
 		GenericMenu menu = new GenericMenu();
 		AtlasAsset atlasAsset = (AtlasAsset)atlasProp.objectReferenceValue;
@@ -338,7 +346,7 @@ public class SpineAtlasRegionDrawer : PropertyDrawer {
 		
 		menu.ShowAsContext();
 	}
-	
+
 	static void HandleSelect (object val) {
 		var pair = (SpineDrawerValuePair)val;
 		pair.property.stringValue = pair.str;
