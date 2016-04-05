@@ -42,9 +42,11 @@ spine-csharp/src/*.cs.meta
 
 spine-monogame/xamarinstudio-ios/src/bin
 spine-monogame/xamarinstudio-ios/src/obj
+spine-monogame/xamarinstudio-ios/src/packages
 
 spine-monogame/xamarinstudio-ios/example/bin
 spine-monogame/xamarinstudio-ios/example/obj
+spine-monogame/xamarinstudio-ios/example/packages
 
 spine-monogame/windows8-store/src/bin
 spine-monogame/windows8-store/src/obj
@@ -94,3 +96,5 @@ spine-starling/spine-starling-example/bin
 spine-starling/spine-starling-example/lib/.spine-starling.swc.stamp
 
 spine-turbulenz/spine-js/spine.js
+
+spine-threejs/spine-js/spine.js
