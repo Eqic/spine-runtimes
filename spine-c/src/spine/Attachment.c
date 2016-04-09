@@ -220,7 +220,7 @@ spMeshAttachment* spMeshAttachment_clone( spMeshAttachment* source )
   if ( source->triangles != NULL )
   {
     self->triangles = MALLOC( unsigned short, source->trianglesCount );
-    memcpy( self->triangles, source->triangles, ( sizeof( int ) * source->trianglesCount ) );
+    memcpy( self->triangles, source->triangles, ( sizeof( unsigned short ) * source->trianglesCount ) );
   }
   
   // edges, edgesCount
@@ -298,7 +298,7 @@ spWeightedMeshAttachment* spWeightedMeshAttachment_clone( spWeightedMeshAttachme
   if ( source->triangles != NULL )
   {
     self->triangles = MALLOC( unsigned short, source->trianglesCount );
-    memcpy( self->triangles, source->triangles, ( sizeof( int ) * source->trianglesCount ) );
+    memcpy( self->triangles, source->triangles, ( sizeof( unsigned short ) * source->trianglesCount ) );
   }
   
   // regionUVs, uvs, uvsCount
