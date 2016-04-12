@@ -71,7 +71,8 @@ void SkeletonRenderer::initialize () {
 	debugBones = false;
 	timeScale = 1;
 
-	worldVertices = MALLOC(float, 1000); // Max number of vertices per mesh.
+//	worldVertices = MALLOC(float, 1000); // Max number of vertices per mesh.
+  worldVertices = MALLOC(float, 2000); // Max number of vertices per mesh.
 
 	batch = PolygonBatch::createWithCapacity(2000); // Max number of vertices and triangles per batch.
 	batch->retain();
